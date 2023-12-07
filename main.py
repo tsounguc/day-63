@@ -90,12 +90,14 @@ def edit(book_id):
             db.session.commit()
         return redirect(url_for('home'))
 
-        # book_to_update.rating =
-        # db.session.commit()
-        # with (app.app_context()):
-        #     book_to_update = db.session.execute(db.select(Books).where(Books.id == book_id)).scalar()
 
-    pass
+@app.route('/delete/<int:book_id>')
+def delete(book_id):
+    with app.app_context():
+        book_to_delete = db.session.execute(db.select(Books).where(Books.id == book_id)).scalar()
+        db.session.delete(book_to_delete)
+        db.session.commit()
+        return redirect(url_for('home'))
 
 
 if __name__ == "__main__":
