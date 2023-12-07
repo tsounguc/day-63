@@ -43,10 +43,13 @@ with app.app_context():
 @app.route('/')
 def home():
     all_books = []
-    result = db.session.execute(db.select(Books).order_by(Books.title))
-    books = result.scalars().all()
+    with app.app_context():
+        result = db.session.execute(db.select(Books).order_by(Books.title))
+        books = result.scalars().all()
+
     for book in books:
         b = {
+            "id": book.id,
             "title": book.title,
             "author": book.author,
             "rating": book.review,
@@ -66,10 +69,33 @@ def add():
         }
         # print(book)
         book_to_add = Books(title=book['title'], author=book['author'], review=book['rating'])
-        db.session.add(book_to_add)
-        db.session.commit()
+        with app.app_context():
+            db.session.add(book_to_add)
+            db.session.commit()
         return redirect(url_for('home'))
     return render_template('add.html')
+
+
+@app.route('/edit/id=<int:book_id>', methods=['GET', 'POST'])
+def edit(book_id):
+    if request.method == 'GET':
+        with app.app_context():
+            book_to_update = db.session.execute(db.select(Books).where(Books.id == book_id)).scalar()
+        return render_template('edit_rating.html', book=book_to_update)
+    elif request.method == 'POST':
+        new_rating = request.form['new_rating']
+        with app.app_context():
+            book_to_update = db.session.execute(db.select(Books).where(Books.id == book_id)).scalar()
+            book_to_update.review = new_rating
+            db.session.commit()
+        return redirect(url_for('home'))
+
+        # book_to_update.rating =
+        # db.session.commit()
+        # with (app.app_context()):
+        #     book_to_update = db.session.execute(db.select(Books).where(Books.id == book_id)).scalar()
+
+    pass
 
 
 if __name__ == "__main__":
